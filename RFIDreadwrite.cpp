@@ -315,6 +315,7 @@ unsigned char MFRC522_SelectTag(unsigned char* serNum);
 unsigned char MFRC522_Auth(unsigned char authMode, unsigned char BlockAddr, unsigned char* Sectorkey, unsigned char* serNum);
 void MFRC522_StopCrypto1();
 void MFRC522_Read(unsigned char blockAddr);
+void MFRC522_Write(unsigned char blockAddr, unsigned char* writeData);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -592,6 +593,44 @@ void MFRC522::MFRC522_Read(unsigned char blockAddr){
    int i = 0;
     if (sizeof(backData) == 16){
       cout<<"Sector "<<+(blockAddr)<<" "<<+(backData)<<endl;}
+} 
+
+void MFRC522::MFRC522_Write(unsigned char blockAddr, unsigned char* writeData){
+   unsigned char* buff = {};
+   buff[0]=(PICC_WRITE);
+   buff[1]=(blockAddr);
+   unsigned char* crc = {};
+   crc = CalulateCRC(buff);
+   buff[2]=(*crc);
+   buff[3]=(*(crc+1));
+   unsigned char* backData={};
+   unsigned char status = false;
+   unsigned char backLen = false;
+   (status, backLen) = MFRC522_ToCard(PCD_TRANSCEIVE, buff, backData);
+   
+   if (not(status == MI_OK) or not(backLen == 4) or not((backData[0] & 0x0F) == 0x0A)){
+        status = MI_ERR;}
+   cout<<+backLen<<" backdata &0x0F == 0x0A "<<(+backData[0]&0x0F)<<endl;
+   
+   if (status == MI_OK){
+    int i = 0;
+    unsigned char* buf = {};
+    while (i < 16){
+            buf[i]=(writeData[i]);
+            i = i + 1;}
+    unsigned char* crc = {};
+    crc = CalulateCRC(buf);
+    buf[16]=(crc[0]);
+    buf[17]=(crc[1]);
+    unsigned char* backData={};
+    unsigned char status = false;
+    unsigned char backLen = false;
+    (status, backLen) = MFRC522_ToCard(PCD_TRANSCEIVE,buf, backData);
+    if (not(status == MI_OK) or not(backLen == 4) or not((backData[0] & 0x0F) == 0x0A)){
+            cout<<"Error while writing"<<endl;}
+    if (status == MI_OK){
+            cout<<"Data written"<<endl;}
+   }
 } 
 
 int main(){
