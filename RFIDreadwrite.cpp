@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <cstring>
 #include <array>
+#include <vector>
 
 int spi_cs0_fd;				//file descriptor for the SPI device
 int spi_cs1_fd;				//file descriptor for the SPI device
@@ -306,7 +307,8 @@ void SetBitMask(unsigned char reg, unsigned char mask);
 void ClearBitMask(unsigned char reg, unsigned char mask);
 void AntennaOn();
 void AntennaOff();
-unsigned char MFRC522_ToCard(unsigned char command, unsigned char* sendData);
+unsigned char MFRC522_ToCard(unsigned char command, unsigned char* sendData, unsigned char* backData);
+unsigned char MFRC522_Request(unsigned char reqMode);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -361,10 +363,11 @@ void MFRC522::AntennaOff(){
     ClearBitMask(TxControlReg, 0x03);
 } 
 
-unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* sendData){
-    unsigned char backData = {};
-    char backLen = 0;
-    char status = MI_ERR;
+unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* sendData, unsigned char* backData ){
+    //std::vector<unsigned char*> v;
+    //unsigned char* backData = {};
+    unsigned char backLen = 0;
+    unsigned char status = MI_ERR;
     unsigned char irqEn = 0x00;
     unsigned char waitIRq = 0x00;
     bool lastBits = false;
@@ -402,7 +405,49 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
     }
     
     ClearBitMask(BitFramingReg, 0x80);
+    
+    if (i != 0){
+      if ((Read_MFRC522(ErrorReg) & 0x1B)==0x00){
+        status = MI_OK;}
+        
+      if (n & irqEn & 0x01){
+          status = MI_NOTAGERR;}
+          
+      if (command == PCD_TRANSCEIVE){
+          n = Read_MFRC522(FIFOLevelReg);
+          lastBits = Read_MFRC522(ControlReg) & 0x07;
+          if (lastBits != 0){
+            backLen = (n-1)*8 + lastBits;}}
+          else{
+            backLen = n*8;}
+            
+      if (n == 0){
+            n = 1;}
+            
+      if (n > MAX_LEN){
+            n = MAX_LEN;}
+            
+      i = 0;
+          while (i<n){
+            backData[i]=(Read_MFRC522(FIFODataReg));
+            i = i + 1;}
+       }
+    else{
+        status = MI_ERR;}
+    
+     return status, backLen;
 } 
+
+unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
+    unsigned char status = false;
+    unsigned char backBits = false;
+    unsigned TagType = {};
+    
+    Write_MFRC522(BitFramingReg, 0x07);
+    
+} 
+
+
 
 
 int main(){
@@ -410,5 +455,3 @@ int main(){
   rect.MFRC522_Init();
  return 0;   
 };
-
-
