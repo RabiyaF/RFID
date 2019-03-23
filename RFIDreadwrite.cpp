@@ -308,7 +308,9 @@ void ClearBitMask(unsigned char reg, unsigned char mask);
 void AntennaOn();
 void AntennaOff();
 unsigned char MFRC522_ToCard(unsigned char command, unsigned char* sendData, unsigned char* backData);
-unsigned char MFRC522_Request(unsigned char reqMode);
+unsigned char MFRC522_Request(unsigned char* reqMode);
+unsigned char MFRC522_Anticoll(unsigned char* backData);
+unsigned char CalulateCRC(unsigned char* pIndata);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -438,17 +440,63 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
      return status, backLen;
 } 
 
-unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
+unsigned char MFRC522::MFRC522_Request(unsigned char *reqMode){
     unsigned char status = false;
     unsigned char backBits = false;
-    unsigned TagType = {};
+    unsigned char* TagType = {};
+    unsigned char* backData = {};
     
     Write_MFRC522(BitFramingReg, 0x07);
     
+    TagType=reqMode;
+    (status,backBits) = MFRC522_ToCard(PCD_TRANSCEIVE, TagType, backData);
+    
+    if (((status != MI_OK) | (backBits != 0x10))){
+      status = MI_ERR;};
+      
+    return (status,backBits);
 } 
 
+unsigned char MFRC522::MFRC522_Anticoll(unsigned char* backData){
+   //unsigned char* backData = {};
+   int serNumCheck = 0;
+   unsigned char* serNum = {};
+   unsigned char status = false;
+   unsigned char backBits = false;
+   int i=0;
+  
+   Write_MFRC522(BitFramingReg, 0x00);
+   
+   serNum[0] = PICC_ANTICOLL;
+   serNum[1] = (0x20);
+   
+   (status,backBits) = MFRC522_ToCard(PCD_TRANSCEIVE,serNum,backData);
+   
+   if(status == MI_OK){
+      i = 0;
+      if (sizeof(backData)==5){
+        while (i<4){
+          serNumCheck = serNumCheck ^ backData[i];
+          i = i + 1;}
+        if (serNumCheck != backData[i]){
+          status = MI_ERR;}}
+      else{
+        status = MI_ERR;}
+      }
+    return (status);
+} 
 
-
+unsigned char MFRC522::CalulateCRC(unsigned char* pIndata){
+    ClearBitMask(DivIrqReg, 0x04);
+    SetBitMask(FIFOLevelReg, 0x80);
+    int i = 0;
+    while (i<sizeof(pIndata)){
+      Write_MFRC522(FIFODataReg, pIndata[i]);
+      i = i + 1;}
+      
+    Write_MFRC522(CommandReg, PCD_CALCCRC);
+    i = 0xFF;
+} 
 
 int main(){
   MFRC522 rect;
