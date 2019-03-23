@@ -451,8 +451,11 @@ unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
     unsigned char status = false;
     unsigned char backBits = false;
     unsigned char* TagType = {};
+    unsigned char val1;
+    TagType=&val1;
     unsigned char* backData = {};
-    
+    unsigned char val2;
+    backData=&val2;	
     Write_MFRC522(BitFramingReg, 0x07);
     
     TagType[0]=reqMode;
