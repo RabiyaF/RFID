@@ -310,7 +310,8 @@ void AntennaOff();
 unsigned char MFRC522_ToCard(unsigned char command, unsigned char* sendData, unsigned char* backData);
 unsigned char MFRC522_Request(unsigned char* reqMode);
 unsigned char MFRC522_Anticoll(unsigned char* backData);
-unsigned char CalulateCRC(unsigned char* pIndata);
+unsigned char* CalulateCRC(unsigned char* pIndata);
+unsigned char MFRC522_SelectTag(unsigned char* serNum);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -486,17 +487,57 @@ unsigned char MFRC522::MFRC522_Anticoll(unsigned char* backData){
     return (status);
 } 
 
-unsigned char MFRC522::CalulateCRC(unsigned char* pIndata){
+unsigned char* MFRC522::CalulateCRC(unsigned char* pIndata){
     ClearBitMask(DivIrqReg, 0x04);
     SetBitMask(FIFOLevelReg, 0x80);
     int i = 0;
+    unsigned char n;
     while (i<sizeof(pIndata)){
       Write_MFRC522(FIFODataReg, pIndata[i]);
       i = i + 1;}
       
     Write_MFRC522(CommandReg, PCD_CALCCRC);
     i = 0xFF;
+    
+    while (true){
+      n = Read_MFRC522(DivIrqReg);
+      i = i - 1;
+      if (not ((i != 0) and not (n&0x04))){
+        break;}}
+        
+    static unsigned char* pOutData = {};
+    pOutData[0]=(Read_MFRC522(CRCResultRegL));
+    pOutData[1]=(Read_MFRC522(CRCResultRegM));
+    return pOutData;
 } 
+
+unsigned char MFRC522::MFRC522_SelectTag(unsigned char* serNum){
+    unsigned char* backData = {};
+    unsigned char* buf = {}; 
+    unsigned char status = false;
+    unsigned char backLen = false;
+    
+    buf[0]=(PICC_SElECTTAG);
+    buf[1]=(0x70);
+    
+    int i = 0;
+    while (i<5){
+      buf[i+2]=(serNum[i]);
+      i = i + 1;}
+    
+    unsigned char* pOut;
+    pOut = CalulateCRC(buf);
+    buf[7]=(*pOut);
+    buf[8]=(*(pOut+1));
+    
+    (status, backLen) = MFRC522_ToCard(PCD_TRANSCEIVE, buf, backData);
+    
+    if ((status == MI_OK) and (backLen == 0x18)){
+      //print "Size: " + str(backData[0]);
+      return    backData[0];}
+    else{
+      return 0;}
+}
 
 int main(){
   MFRC522 rect;
