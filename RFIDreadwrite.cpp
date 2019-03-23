@@ -297,7 +297,7 @@ using namespace std;
   unsigned char* serNum={};
   
 class MFRC522 {
-unsigned char addr, val;
+//unsigned char addr, val;
 public:
 void MFRC522_Reset();
 void MFRC522_Init();
@@ -313,6 +313,8 @@ unsigned char MFRC522_Anticoll(unsigned char* backData);
 unsigned char* CalulateCRC(unsigned char* pIndata);
 unsigned char MFRC522_SelectTag(unsigned char* serNum);
 unsigned char MFRC522_Auth(unsigned char authMode, unsigned char BlockAddr, unsigned char* Sectorkey, unsigned char* serNum);
+void MFRC522_StopCrypto1();
+void MFRC522_Read(unsigned char blockAddr);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -331,6 +333,7 @@ void MFRC522::MFRC522_Init(){
   Write_MFRC522(TReloadRegH, 0);
   Write_MFRC522(TxAutoReg, 0x40);
   Write_MFRC522(ModeReg, 0x3D);
+  AntennaOn();
 } 
 
 void MFRC522::Write_MFRC522(unsigned char addr, unsigned char val){
@@ -567,6 +570,29 @@ unsigned char MFRC522::MFRC522_Auth(unsigned char authMode, unsigned char BlockA
       
     return status;
 }
+
+void MFRC522::MFRC522_StopCrypto1(){
+   ClearBitMask(Status2Reg, 0x08);
+} 
+
+void MFRC522::MFRC522_Read(unsigned char blockAddr){
+   unsigned char* recvData = {};
+   recvData[0]=(PICC_READ);
+   recvData[1]=(blockAddr);
+   unsigned char* pOut;
+   pOut = CalulateCRC(recvData);
+   recvData[2]=(*pOut);
+   recvData[3]=(*(pOut+1));
+   unsigned char* backData={};
+   unsigned char status = false;
+   unsigned char backLen = false;
+   (status, backLen) = MFRC522_ToCard(PCD_TRANSCEIVE, recvData, backData);
+   if (not(status == MI_OK)){
+       cout<<"Error while reading!"<<endl;}
+   int i = 0;
+    if (sizeof(backData) == 16){
+      cout<<"Sector "<<+(blockAddr)<<" "<<+(backData)<<endl;}
+} 
 
 int main(){
   MFRC522 rect;
