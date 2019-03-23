@@ -308,7 +308,7 @@ void ClearBitMask(unsigned char reg, unsigned char mask);
 void AntennaOn();
 void AntennaOff();
 unsigned char MFRC522_ToCard(unsigned char command, unsigned char* sendData, unsigned char* backData);
-unsigned char MFRC522_Request(unsigned char* reqMode);
+unsigned char MFRC522_Request(unsigned char reqMode);
 unsigned char MFRC522_Anticoll(unsigned char* backData);
 unsigned char* CalulateCRC(unsigned char* pIndata);
 unsigned char MFRC522_SelectTag(unsigned char* serNum);
@@ -447,7 +447,7 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
      return status, backLen;
 } 
 
-unsigned char MFRC522::MFRC522_Request(unsigned char *reqMode){
+unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
     unsigned char status = false;
     unsigned char backBits = false;
     unsigned char* TagType = {};
@@ -455,7 +455,7 @@ unsigned char MFRC522::MFRC522_Request(unsigned char *reqMode){
     
     Write_MFRC522(BitFramingReg, 0x07);
     
-    TagType=reqMode;
+    TagType[0]=reqMode;
     (status,backBits) = MFRC522_ToCard(PCD_TRANSCEIVE, TagType, backData);
     
     if (((status != MI_OK) | (backBits != 0x10))){
@@ -648,7 +648,15 @@ void MFRC522::MFRC522_DumpClassic1K(unsigned char* key, unsigned char* uid){
 } 
 
 int main(){
-  MFRC522 rect;
-  rect.MFRC522_Init();
+  int continue_reading = true;
+  MFRC522 MIFAREReader;
+  MIFAREReader.MFRC522_Init();
+  unsigned char status = false;
+  unsigned char TagType;
+  while(continue_reading){
+      (status,TagType) = MIFAREReader.MFRC522_Request(PICC_REQIDL);
+  if (status == MI_OK){
+        cout<< "Card detected"<<endl;};
+  }
  return 0;   
 };
