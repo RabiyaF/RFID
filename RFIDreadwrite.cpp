@@ -193,7 +193,7 @@ int SpiWriteAndRead (int spi_device, unsigned char *data, int length)
 //#include "SPI.cpp"
 #include "gpio-sysfs.h"
 //#include "gpio-sysfs.cpp"
-//using namespace std;
+using namespace std;
 
   unsigned int NRSTPD = 22;
   int ChipSelect=0;
@@ -294,7 +294,7 @@ int SpiWriteAndRead (int spi_device, unsigned char *data, int length)
   unsigned char Reserved33      = 0x3E;
   unsigned char Reserved34      = 0x3F;
     
-  char serNum={};
+  unsigned char* serNum={};
   
 class MFRC522 {
 unsigned char addr, val;
@@ -312,6 +312,7 @@ unsigned char MFRC522_Request(unsigned char* reqMode);
 unsigned char MFRC522_Anticoll(unsigned char* backData);
 unsigned char* CalulateCRC(unsigned char* pIndata);
 unsigned char MFRC522_SelectTag(unsigned char* serNum);
+unsigned char MFRC522_Auth(unsigned char authMode, unsigned char BlockAddr, unsigned char* Sectorkey, unsigned char* serNum);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -533,10 +534,38 @@ unsigned char MFRC522::MFRC522_SelectTag(unsigned char* serNum){
     (status, backLen) = MFRC522_ToCard(PCD_TRANSCEIVE, buf, backData);
     
     if ((status == MI_OK) and (backLen == 0x18)){
-      //print "Size: " + str(backData[0]);
+      cout<<"Size: " <<+(backData[0])<<endl;
       return    backData[0];}
     else{
       return 0;}
+}
+
+unsigned char MFRC522::MFRC522_Auth(unsigned char authMode, unsigned char BlockAddr, unsigned char* Sectorkey, unsigned char* serNum){
+    unsigned char* buff = {};
+    buff[0]=authMode;
+    buff[1]=BlockAddr;
+    
+    int i = 0;
+    while(i < sizeof(Sectorkey)){
+      buff[i+2]=(Sectorkey[i]);
+      i = i + 1;}
+    
+    i = 0;
+    while(i < 4){
+      buff[8+i]=(serNum[i]);
+      i = i +1;}
+     
+    unsigned char* backData= {};
+    unsigned char status = false;
+    unsigned char backLen = false;
+    (status, backLen) = MFRC522_ToCard(PCD_AUTHENT,buff, backData);
+    
+    if (not(status == MI_OK)){
+      cout<<"AUTH ERROR!!"<<endl;}
+    if (not (Read_MFRC522(Status2Reg) & 0x08) != 0){
+      cout<<"AUTH ERROR(status2reg & 0x08) != 0"<<endl;}
+      
+    return status;
 }
 
 int main(){
