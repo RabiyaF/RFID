@@ -316,6 +316,7 @@ unsigned char MFRC522_Auth(unsigned char authMode, unsigned char BlockAddr, unsi
 void MFRC522_StopCrypto1();
 void MFRC522_Read(unsigned char blockAddr);
 void MFRC522_Write(unsigned char blockAddr, unsigned char* writeData);
+void MFRC522_DumpClassic1K(unsigned char* key, unsigned char* uid);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -631,6 +632,19 @@ void MFRC522::MFRC522_Write(unsigned char blockAddr, unsigned char* writeData){
     if (status == MI_OK){
             cout<<"Data written"<<endl;}
    }
+} 
+
+void MFRC522::MFRC522_DumpClassic1K(unsigned char* key, unsigned char* uid){
+    int i = 0;
+    unsigned char status = false;
+    while (i < 64){
+    status = MFRC522_Auth(PICC_AUTHENT1A, i, key, uid);
+    if (status == MI_OK){
+            MFRC522_Read(i);}
+    else{
+            cout<< "Authentication error"<<endl;}
+        i = i+1;
+    }
 } 
 
 int main(){
