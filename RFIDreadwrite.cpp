@@ -8,6 +8,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
+#include <array>
 
 int spi_cs0_fd;				//file descriptor for the SPI device
 int spi_cs1_fd;				//file descriptor for the SPI device
@@ -292,7 +293,7 @@ int SpiWriteAndRead (int spi_device, unsigned char *data, int length)
   unsigned char Reserved33      = 0x3E;
   unsigned char Reserved34      = 0x3F;
     
-  char serNum;
+  char serNum={};
   
 class MFRC522 {
 unsigned char addr, val;
@@ -300,7 +301,12 @@ public:
 void MFRC522_Reset();
 void MFRC522_Init();
 void Write_MFRC522(unsigned char addr, unsigned char val);
-unsigned char Read_MFRC522(unsigned char addr, unsigned char val);
+unsigned char Read_MFRC522(unsigned char addr);
+void SetBitMask(unsigned char reg, unsigned char mask);
+void ClearBitMask(unsigned char reg, unsigned char mask);
+void AntennaOn();
+void AntennaOff();
+unsigned char MFRC522_ToCard(unsigned char command, unsigned char* sendData);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -312,6 +318,13 @@ void MFRC522::MFRC522_Init(){
   gpio_set_dir(NRSTPD,1);
   gpio_set_value(NRSTPD,1);
   SpiOpenPort(ChipSelect);
+  MFRC522_Reset();
+  Write_MFRC522(TModeReg, 0x8D);
+  Write_MFRC522(TPrescalerReg, 0x3E);
+  Write_MFRC522(TReloadRegL, 30);
+  Write_MFRC522(TReloadRegH, 0);
+  Write_MFRC522(TxAutoReg, 0x40);
+  Write_MFRC522(ModeReg, 0x3D);
 } 
 
 void MFRC522::Write_MFRC522(unsigned char addr, unsigned char val){
@@ -321,12 +334,64 @@ void MFRC522::Write_MFRC522(unsigned char addr, unsigned char val){
   SpiWriteAndRead(ChipSelect,data,2);
 } 
 
-unsigned char MFRC522::Read_MFRC522(unsigned char addr, unsigned char val){
+unsigned char MFRC522::Read_MFRC522(unsigned char addr){
   unsigned char data[2];
   data[0]=((addr<<1)&0x7E) | 0x80;
   SpiWriteAndRead(ChipSelect,data,2);
   return data[0];
 } 
+
+void MFRC522::SetBitMask(unsigned char reg, unsigned char mask){
+   unsigned char tmp = Read_MFRC522(reg);
+   Write_MFRC522(reg, tmp | mask);
+} 
+
+void MFRC522::ClearBitMask(unsigned char reg, unsigned char mask){
+    unsigned char tmp = Read_MFRC522(reg);
+    Write_MFRC522(reg, tmp & (~mask));
+} 
+
+void MFRC522::AntennaOn(){
+    unsigned char temp = Read_MFRC522(TxControlReg);
+    if(~(temp & 0x03)){
+      SetBitMask(TxControlReg, 0x03);};
+} 
+
+void MFRC522::AntennaOff(){
+    ClearBitMask(TxControlReg, 0x03);
+} 
+
+unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* sendData){
+    unsigned char backData = {};
+    char backLen = 0;
+    char status = MI_ERR;
+    unsigned char irqEn = 0x00;
+    unsigned char waitIRq = 0x00;
+    bool lastBits = false;
+    unsigned char n = 0;
+    int i = 0;
+    
+    if (command == PCD_AUTHENT){
+      irqEn = 0x12;
+      waitIRq = 0x10;};
+    if (command == PCD_TRANSCEIVE){
+      irqEn = 0x77;
+      waitIRq = 0x30;};
+    
+    Write_MFRC522(CommIEnReg, irqEn|0x80);
+    ClearBitMask(CommIrqReg, 0x80);
+    SetBitMask(FIFOLevelReg, 0x80);
+    
+    Write_MFRC522(CommandReg, PCD_IDLE); 
+    
+    while(i<sizeof(sendData)){
+      Write_MFRC522(FIFODataReg, sendData[i]);
+      i = i+1;}
+      
+    Write_MFRC522(CommandReg, command);
+      
+} 
+
 
 int main(){
   MFRC522 rect;
