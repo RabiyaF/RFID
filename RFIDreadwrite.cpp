@@ -389,7 +389,19 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
       i = i+1;}
       
     Write_MFRC522(CommandReg, command);
-      
+    
+    if (command == PCD_TRANSCEIVE){
+      SetBitMask(BitFramingReg, 0x80);}
+    
+    i = 2000;
+    while (1){
+    n = Read_MFRC522(CommIrqReg);
+    i = i - 1;
+    if (~((i!=0) and ~(n&0x01) and ~(n&waitIRq))){
+    break;};
+    }
+    
+    ClearBitMask(BitFramingReg, 0x80);
 } 
 
 
@@ -398,3 +410,5 @@ int main(){
   rect.MFRC522_Init();
  return 0;   
 };
+
+
