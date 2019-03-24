@@ -390,7 +390,7 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
 		unsigned char irqEn = 0x00;
 		unsigned char waitIRq = 0x00;
 		bool lastBits = false;
-		unsigned char n = 0;
+		int n = 0;
 		int i = 0;
 		
 //		cout << "MFRC522_ToCard:- command: "<<command<<", sendData: " << sendData << endl;
@@ -422,10 +422,12 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
 		
 		i = 2000;
 		while (1){
-		n = Read_MFRC522(CommIrqReg);
-		i = i - 1;
-		if (~((i!=0) and ~(n&0x01) and ~(n&waitIRq))){
-		break;};
+			n = Read_MFRC522(CommIrqReg);
+			i = i - 1;
+			if (~((i!=0) and ~(n&0x01) and ~(n&waitIRq))){
+//			if ((i != 0) && !(n & 0x01) && !(n & waitIRq){
+				break;
+			};
 		}
 		
 		ClearBitMask(BitFramingReg, 0x80);
@@ -499,7 +501,8 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 		while(i<sendData.size()){
 			Write_MFRC522(FIFODataReg, sendData[i]);
 			i = i+1;}
-			
+		
+		cout << "i after FIFODataReg write " << i << endl;	
 		Write_MFRC522(CommandReg, command);
 		
 		if (command == PCD_TRANSCEIVE){
@@ -507,27 +510,31 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 		}
 		
 		i = 2000;
-		while (1){
+		while(1){
 			n = Read_MFRC522(CommIrqReg);
 			i = i - 1;
-			if (~((i!=0) and ~(n&0x01) and ~(n&waitIRq))){
+			if (~((i != 0) && ~(n & 0x01) && ~(n & waitIRq))){
+				cout << "break here "<< i <<" " << (int)n<< endl;
 				break;
-			};
+			}
 		}
-		
+		// cout << "break here "<< i <<" " << (int)n<< endl;
 		ClearBitMask(BitFramingReg, 0x80);
 		
 		if (i != 0){
 			if ((Read_MFRC522(ErrorReg) & 0x1B)==0x00){
+				cout << "READ CORRECTLY" << endl;
 				status = MI_OK;
 				
 				if (n & irqEn & 0x01){
 					status = MI_NOTAGERR;
+					cout << "MI_NOTAGGER" << endl;
 				}
 						
 				if (command == PCD_TRANSCEIVE){
 					n = Read_MFRC522(FIFOLevelReg);
 					lastBits = Read_MFRC522(ControlReg) & 0x07;
+					cout << "lastBits " << lastBits << " " << (int)lastBits << endl;
 					if (lastBits != 0){
 						backLen = (n-1)*8 + lastBits;
 					}else{
@@ -541,6 +548,7 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 					if (n > MAX_LEN){
 						n = MAX_LEN;
 					}
+					cout << "backLen " << backLen << " " << n << endl;
 								
 					i = 0;
 					while (i<n){

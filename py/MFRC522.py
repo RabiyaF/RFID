@@ -205,7 +205,7 @@ class MFRC522:
     while True:
       n = self.Read_MFRC522(self.CommIrqReg)
       i = i - 1
-      print('while true:', n, int(n), i)
+      # print('while true:', n, int(n), i)
       if ~((i!=0) and ~(n&0x01) and ~(n&waitIRq)):
         print('break here:', i, n)
         break
@@ -245,7 +245,7 @@ class MFRC522:
       else:
         status = self.MI_ERR
 
-    input('wait?')
+    # input('wait?')
 
     return (status,backData,backLen)
   
