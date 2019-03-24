@@ -10,6 +10,10 @@
 #include <cstring>
 #include <array>
 #include <vector>
+#include "gpio-sysfs.h"
+#include "gpio-sysfs.cpp"
+using namespace std;
+
 
 int spi_cs0_fd;				//file descriptor for the SPI device
 int spi_cs1_fd;				//file descriptor for the SPI device
@@ -174,8 +178,13 @@ int SpiWriteAndRead (int spi_device, unsigned char *data, int length)
 		exit(1);
 	}
 
+
+	cout << "SpiWriteAndRead: retVal" << retVal << endl;
+
 	return retVal;
 }
+
+
 
 
 struct group_obj
@@ -185,26 +194,14 @@ struct group_obj
 	int backLen;
 };
 
-//#include <fcntl.h>				//Needed for SPI port
-//#include <sys/ioctl.h>			//Needed for SPI port
-//#include <linux/spi/spidev.h>	//Needed for SPI port
-//#include <unistd.h>			//Needed for SPI port
-//#include <stdio.h>
-//#include <stdlib.h>
-//#include <string>
-//#include <iostream>
-//#include <unistd.h>
-//#include <cstring>
-//#include "SPI.cpp"
-#include "gpio-sysfs.h"
-#include "gpio-sysfs.cpp"
-using namespace std;
 
+class MFRC522 {
+public:
 	unsigned int NRSTPD = 22;
 	int ChipSelect=0;
-	
+
 	int MAX_LEN = 16;
-	
+
 	unsigned char PCD_IDLE       = 0x00;
 	unsigned char PCD_AUTHENT    = 0x0E;
 	unsigned char PCD_RECEIVE    = 0x08;
@@ -212,7 +209,7 @@ using namespace std;
 	unsigned char PCD_TRANSCEIVE = 0x0C;
 	unsigned char PCD_RESETPHASE = 0x0F;
 	unsigned char PCD_CALCCRC    = 0x03;
-	
+
 	unsigned char PICC_REQIDL    = 0x26;
 	unsigned char PICC_REQALL    = 0x52;
 	unsigned char PICC_ANTICOLL  = 0x93;
@@ -226,11 +223,11 @@ using namespace std;
 	unsigned char PICC_RESTORE   = 0xC2;
 	unsigned char PICC_TRANSFER  = 0xB0;
 	unsigned char PICC_HALT      = 0x50;
-	
+
 	char MI_OK       = 0;
 	char MI_NOTAGERR = 1;
 	char MI_ERR      = 2;
-	
+
 	unsigned char Reserved00     = 0x00;
 	unsigned char CommandReg     = 0x01;
 	unsigned char CommIEnReg     = 0x02;
@@ -247,7 +244,7 @@ using namespace std;
 	unsigned char BitFramingReg  = 0x0D;
 	unsigned char CollReg        = 0x0E;
 	unsigned char Reserved01     = 0x0F;
-	
+
 	unsigned char Reserved10     = 0x10;
 	unsigned char ModeReg        = 0x11;
 	unsigned char TxModeReg      = 0x12;
@@ -264,7 +261,7 @@ using namespace std;
 	unsigned char Reserved13     = 0x1D;
 	unsigned char Reserved14     = 0x1E;
 	unsigned char SerialSpeedReg = 0x1F;
-	
+
 	unsigned char Reserved20        = 0x20; 
 	unsigned char CRCResultRegM     = 0x21;
 	unsigned char CRCResultRegL     = 0x22;
@@ -281,7 +278,7 @@ using namespace std;
 	unsigned char TReloadRegL       = 0x2D;
 	unsigned char TCounterValueRegH = 0x2E;
 	unsigned char TCounterValueRegL = 0x2F;
-	
+
 	unsigned char Reserved30      = 0x30;
 	unsigned char TestSel1Reg     = 0x31;
 	unsigned char TestSel2Reg     = 0x32;
@@ -300,30 +297,27 @@ using namespace std;
 	unsigned char Reserved34      = 0x3F;
 		
 	unsigned char* serNum={};
-	
-class MFRC522 {
-//unsigned char addr, val;
-public:
-void MFRC522_Reset();
-void MFRC522_Init();
-void Write_MFRC522(unsigned char addr, unsigned char val);
-unsigned char Read_MFRC522(unsigned char addr);
-void SetBitMask(unsigned char reg, unsigned char mask);
-void ClearBitMask(unsigned char reg, unsigned char mask);
-void AntennaOn();
-void AntennaOff();
-unsigned char MFRC522_ToCard(unsigned char command, unsigned char* sendData, unsigned char* backData);
-group_obj MFRC522_ToCard_vec(unsigned char command, std::vector<unsigned char> sendData);
 
-unsigned char MFRC522_Request(unsigned char reqMode);
-unsigned char MFRC522_Anticoll(unsigned char* backData);
-unsigned char* CalulateCRC(unsigned char* pIndata);
-unsigned char MFRC522_SelectTag(unsigned char* serNum);
-unsigned char MFRC522_Auth(unsigned char authMode, unsigned char BlockAddr, unsigned char* Sectorkey, unsigned char* serNum);
-void MFRC522_StopCrypto1();
-void MFRC522_Read(unsigned char blockAddr);
-void MFRC522_Write(unsigned char blockAddr, unsigned char* writeData);
-void MFRC522_DumpClassic1K(unsigned char* key, unsigned char* uid);
+	void MFRC522_Reset();
+	void MFRC522_Init();
+	void Write_MFRC522(unsigned char addr, unsigned char val);
+	unsigned char Read_MFRC522(unsigned char addr);
+	void SetBitMask(unsigned char reg, unsigned char mask);
+	void ClearBitMask(unsigned char reg, unsigned char mask);
+	void AntennaOn();
+	void AntennaOff();
+	unsigned char MFRC522_ToCard(unsigned char command, unsigned char* sendData, unsigned char* backData);
+	group_obj MFRC522_ToCard_vec(unsigned char command, std::vector<unsigned char> sendData);
+
+	unsigned char MFRC522_Request(unsigned char reqMode);
+	unsigned char MFRC522_Anticoll(unsigned char* backData);
+	unsigned char* CalulateCRC(unsigned char* pIndata);
+	unsigned char MFRC522_SelectTag(unsigned char* serNum);
+	unsigned char MFRC522_Auth(unsigned char authMode, unsigned char BlockAddr, unsigned char* Sectorkey, unsigned char* serNum);
+	void MFRC522_StopCrypto1();
+	void MFRC522_Read(unsigned char blockAddr);
+	void MFRC522_Write(unsigned char blockAddr, unsigned char* writeData);
+	void MFRC522_DumpClassic1K(unsigned char* key, unsigned char* uid);
 };
 
 void MFRC522::MFRC522_Reset(){
@@ -349,13 +343,18 @@ void MFRC522::Write_MFRC522(unsigned char addr, unsigned char val){
 	unsigned char data[2];
 	data[0]=((addr<<1)&0x7E);
 	data[1]=val;
+	cout << "Write_MFRC522:-" << data[0] << data[1] << (int)data[0] << (int)data[1] << hex << data[0] << data[1] << endl;
 	SpiWriteAndRead(ChipSelect,data,2);
 } 
 
 unsigned char MFRC522::Read_MFRC522(unsigned char addr){
 	unsigned char data[2];
-	data[0]=((addr<<1)&0x7E) | 0x80;
+	data[0] = ((addr<<1)&0x7E) | 0x80;
+	data[1] = 0;
+	cout << "Read_MFRC522--" << data[0] << data[1] << (int)data[0] << (int)data[1] << hex << data[0] << data[1] << endl;
 	SpiWriteAndRead(ChipSelect,data,2);
+	cout << "Read_MFRC522--++" << data[0] << data[1] << (int)data[0] << (int)data[1] << hex << data[0] << data[1] << endl;
+
 	return data[0];
 } 
 
@@ -484,21 +483,23 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 		
 		Write_MFRC522(CommandReg, PCD_IDLE); 
 		
-		while(i<sizeof(sendData)){
+		while(i<sendData.size()){
 			Write_MFRC522(FIFODataReg, sendData[i]);
 			i = i+1;}
 			
 		Write_MFRC522(CommandReg, command);
 		
 		if (command == PCD_TRANSCEIVE){
-			SetBitMask(BitFramingReg, 0x80);}
+			SetBitMask(BitFramingReg, 0x80);
+		}
 		
 		i = 2000;
 		while (1){
-		n = Read_MFRC522(CommIrqReg);
-		i = i - 1;
-		if (~((i!=0) and ~(n&0x01) and ~(n&waitIRq))){
-		break;};
+			n = Read_MFRC522(CommIrqReg);
+			i = i - 1;
+			if (~((i!=0) and ~(n&0x01) and ~(n&waitIRq))){
+				break;
+			};
 		}
 		
 		ClearBitMask(BitFramingReg, 0x80);
@@ -761,17 +762,16 @@ void MFRC522::MFRC522_DumpClassic1K(unsigned char* key, unsigned char* uid){
 } 
 
 int main(){
-	
-
 	int continue_reading = true;
 	MFRC522 MIFAREReader;
 	MIFAREReader.MFRC522_Init();
 	unsigned char status = false;
 	unsigned char TagType;
 	while(continue_reading){
-			(status,TagType) = MIFAREReader.MFRC522_Request(PICC_REQIDL);
-	if (status == MI_OK){
-				cout<< "Card detected"<<endl;};
+		(status,TagType) = MIFAREReader.MFRC522_Request(PICC_REQIDL);
+		if (status == MI_OK){
+			cout<< "Card detected"<<endl;
+		};
 	}
  return 0;   
 };

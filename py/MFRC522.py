@@ -138,10 +138,14 @@ class MFRC522:
     self.Write_MFRC522(self.CommandReg, self.PCD_RESETPHASE)
   
   def Write_MFRC522(self, addr, val):
+    print('Write_MFRC522:- addr:', (addr<<1)&0x7E, 'val', val)
     spi.transfer(((addr<<1)&0x7E,val))
+
   
   def Read_MFRC522(self, addr):
+    print('Read_MFRC522:-', ((addr<<1)&0x7E) | 0x80)
     val = spi.transfer((((addr<<1)&0x7E) | 0x80,0))
+    print('Read_MFRC522:- val', val)
     return val[1]
   
   def SetBitMask(self, reg, mask):
