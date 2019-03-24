@@ -195,6 +195,7 @@ class MFRC522:
       self.Write_MFRC522(self.FIFODataReg, sendData[i])
       i = i+1
     
+    print('i after FIFODataReg write', i)
     self.Write_MFRC522(self.CommandReg, command)
       
     if command == self.PCD_TRANSCEIVE:
@@ -204,21 +205,27 @@ class MFRC522:
     while True:
       n = self.Read_MFRC522(self.CommIrqReg)
       i = i - 1
+      print('while true:', n, int(n), i)
       if ~((i!=0) and ~(n&0x01) and ~(n&waitIRq)):
+        print('break here:', i, n)
         break
     
     self.ClearBitMask(self.BitFramingReg, 0x80)
   
     if i != 0:
       if (self.Read_MFRC522(self.ErrorReg) & 0x1B)==0x00:
+        print('READ_correctly')
         status = self.MI_OK
 
         if n & irqEn & 0x01:
           status = self.MI_NOTAGERR
+          print('MI_NOTAGERR')
       
         if command == self.PCD_TRANSCEIVE:
           n = self.Read_MFRC522(self.FIFOLevelReg)
           lastBits = self.Read_MFRC522(self.ControlReg) & 0x07
+          print('lastBits', type(lastBits), lastBits)
+
           if lastBits != 0:
             backLen = (n-1)*8 + lastBits
           else:
@@ -228,6 +235,8 @@ class MFRC522:
             n = 1
           if n > self.MAX_LEN:
             n = self.MAX_LEN
+
+          print('backLen', backLen, 'n', n)
     
           i = 0
           while i<n:
@@ -235,6 +244,8 @@ class MFRC522:
             i = i + 1;
       else:
         status = self.MI_ERR
+
+    input('wait?')
 
     return (status,backData,backLen)
   
