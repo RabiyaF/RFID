@@ -195,9 +195,7 @@ struct group_obj
 };
 
 
-class MFRC522 {
-public:
-	unsigned int NRSTPD = 22;
+unsigned int NRSTPD = 22;
 	int ChipSelect=0;
 
 	int MAX_LEN = 16;
@@ -297,6 +295,10 @@ public:
 	unsigned char Reserved34      = 0x3F;
 		
 	unsigned char* serNum={};
+
+class MFRC522 {
+public:
+	
 
 	void MFRC522_Reset();
 	void MFRC522_Init();
@@ -459,7 +461,7 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
 group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigned char> sendData){
 		std::vector<unsigned char> backData;
 		//unsigned char* backData = {};
-		unsigned char backLen = 0;
+		unsigned backLen = 0;
 		unsigned char status = MI_ERR;
 		unsigned char irqEn = 0x00;
 		unsigned char waitIRq = 0x00;
@@ -467,7 +469,12 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 		unsigned char n = 0;
 		int i = 0;
 		
-		cout << "MFRC522_ToCard:- command: "<<command<<", sendData: " << sendData << endl;
+		cout << "MFRC522_ToCard:- command: "<<command<<", sendData: ";
+		for(int bb=0; bb<sendData.size();bb++){
+			cout << sendData[bb] ;
+		}
+		cout << endl;
+
 		if (command == PCD_AUTHENT){
 			irqEn = 0x12;
 			waitIRq = 0x10;
@@ -544,21 +551,16 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 
 unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
 		unsigned char status = false;
-		unsigned char backBits = false;
+		int backBits=0;
 		unsigned char* TagType = {};
 		std::vector<unsigned char> TagType2;
 		TagType2.push_back(reqMode); 
 
-
-		unsigned char val1;
-		TagType=&val1;
-		unsigned char* backData = {};
-		unsigned char val2;
-		backData=&val2;
+		std::vector<unsigned char> backData;
 
 		Write_MFRC522(BitFramingReg, 0x07);  // TODO
 		
-		cout << "MFRC522_Request:- TagType " << (int)reqMode << endl;
+		cout << "MFRC522_Request:- TagType " << (int)reqMode <<  endl << "backData: ";
 
 		TagType[0]=reqMode;
 		// group_obj ret_obj = MFRC522_ToCard_vec(PCD_TRANSCEIVE, TagType2, backData);
@@ -567,7 +569,13 @@ unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
 		backData = ret_obj.backData;
 		backBits = ret_obj.backLen;
 
-		cout << "MFRC522_Request:- status: " << (int)status << ", backdata: "<<backData<<", backBits: "<< backBits << endl;
+
+		for(int bb=0; bb<backData.size();bb++){
+			cout << backData[bb] ;
+		}
+		cout << endl;
+		
+		cout << "MFRC522_Request:- status: " << (int)status <<", backBits: "<< backBits << endl;
 
 
 		if (((status != MI_OK) | (backBits != 0x10))){
