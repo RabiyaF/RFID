@@ -345,17 +345,18 @@ void MFRC522::Write_MFRC522(unsigned char addr, unsigned char val){
 	unsigned char data[2];
 	data[0]=((addr<<1)&0x7E);
 	data[1]=val;
-	cout << "Write_MFRC522:-" << data[0] << data[1] << (int)data[0] << (int)data[1] << hex << data[0] << data[1] << endl;
+	cout << "Write_MFRC522:-" << (int)data[0] << "  " << (int)data[1] << "  " << hex << data[0] << "  " << data[1] << endl;
 	SpiWriteAndRead(ChipSelect,data,2);
+	Read_MFRC522(addr);
 } 
 
 unsigned char MFRC522::Read_MFRC522(unsigned char addr){
 	unsigned char data[2];
 	data[0] = ((addr<<1)&0x7E) | 0x80;
 	data[1] = 0;
-	cout << "Read_MFRC522--" << data[0] << data[1] << (int)data[0] << (int)data[1] << hex << data[0] << data[1] << endl;
+	cout << "Read_MFRC522--" << (int)data[0] << "  " << (int)data[1] << "  " << hex << data[0] << "  " << hex << data[1] << endl;
 	SpiWriteAndRead(ChipSelect,data,2);
-	cout << "Read_MFRC522--++" << data[0] << data[1] << (int)data[0] << (int)data[1] << hex << data[0] << data[1] << endl;
+	cout << "Read_MFRC522--++" << (int)data[0] << "  " << (int)data[1] << "  " << hex << data[0] << "  " << hex << data[1] << endl;
 
 	return data[0];
 } 
@@ -534,6 +535,8 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 						
 			i = 0;
 					while (i<n){
+						cout << i << " / " << n << endl;
+						backData.push_back(0);
 						backData[i]=(Read_MFRC522(FIFODataReg));
 						i = i + 1;}
 			 }
@@ -562,7 +565,6 @@ unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
 		
 		cout << "MFRC522_Request:- TagType " << (int)reqMode <<  endl << "backData: ";
 
-		TagType[0]=reqMode;
 		// group_obj ret_obj = MFRC522_ToCard_vec(PCD_TRANSCEIVE, TagType2, backData);
 		group_obj ret_obj = MFRC522_ToCard_vec(PCD_TRANSCEIVE, TagType2);
 		status = ret_obj.status;

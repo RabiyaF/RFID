@@ -138,14 +138,14 @@ class MFRC522:
     self.Write_MFRC522(self.CommandReg, self.PCD_RESETPHASE)
   
   def Write_MFRC522(self, addr, val):
-    print('Write_MFRC522:- addr:', (addr<<1)&0x7E, 'val', val)
+    # print('Write_MFRC522:- addr:', (addr<<1)&0x7E, 'val', val)
     spi.transfer(((addr<<1)&0x7E,val))
 
   
   def Read_MFRC522(self, addr):
-    print('Read_MFRC522:-', ((addr<<1)&0x7E) | 0x80)
+    # print('Read_MFRC522:-', ((addr<<1)&0x7E) | 0x80)
     val = spi.transfer((((addr<<1)&0x7E) | 0x80,0))
-    print('Read_MFRC522:- val', val)
+    # print('Read_MFRC522:- val', val)
     return val[1]
   
   def SetBitMask(self, reg, mask):
@@ -174,16 +174,16 @@ class MFRC522:
     n = 0
     i = 0
     
-    print('MFRC522_ToCard:- command: {}, sendData: {}'.format(command, sendData))
+    # print('MFRC522_ToCard:- command: {}, sendData: {}'.format(command, sendData))
     if command == self.PCD_AUTHENT:
       irqEn = 0x12
       waitIRq = 0x10
-      print('MFRC522_ToCard:- command: PCD_AUTHENT')
+      # print('MFRC522_ToCard:- command: PCD_AUTHENT')
 
     if command == self.PCD_TRANSCEIVE:
       irqEn = 0x77
       waitIRq = 0x30
-      print('MFRC522_ToCard:- command: PCD_TRANSCEIVE')
+      # print('MFRC522_ToCard:- command: PCD_TRANSCEIVE')
     
     self.Write_MFRC522(self.CommIEnReg, irqEn|0x80)
     self.ClearBitMask(self.CommIrqReg, 0x80)
@@ -247,11 +247,10 @@ class MFRC522:
     self.Write_MFRC522(self.BitFramingReg, 0x07)
     
     TagType.append(reqMode);
-    print('MFRC522_Request:- TagType', TagType)
+    # print('MFRC522_Request:- TagType', TagType)
     (status,backData,backBits) = self.MFRC522_ToCard(self.PCD_TRANSCEIVE, TagType)
-    print('MFRC522_Request:-  status: {}, backdata: {}, backBits: {}'.format(TagType, backData, backBits))
+    # print('MFRC522_Request:-  status: {}, backdata: {}, backBits: {}'.format(TagType, backData, backBits))
 
-    input('warte?')
     if ((status != self.MI_OK) | (backBits != 0x10)):
       status = self.MI_ERR
       

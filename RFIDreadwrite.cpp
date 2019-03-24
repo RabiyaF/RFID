@@ -559,7 +559,7 @@ unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
 		
 		cout << "MFRC522_Request:- TagType " << (int)reqMode << endl;
 
-		TagType[0]=reqMode;
+		TagType.push_back(reqMode);
 		// group_obj ret_obj = MFRC522_ToCard_vec(PCD_TRANSCEIVE, TagType2, backData);
 		group_obj ret_obj = MFRC522_ToCard_vec(PCD_TRANSCEIVE, TagType2);
 		status = ret_obj.status;
