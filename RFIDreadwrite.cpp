@@ -192,7 +192,7 @@ int SpiWriteAndRead (int spi_device, unsigned char *data, int length)
 //#include <cstring>
 //#include "SPI.cpp"
 #include "gpio-sysfs.h"
-//#include "gpio-sysfs.cpp"
+#include "gpio-sysfs.cpp"
 using namespace std;
 
   unsigned int NRSTPD = 22;
@@ -457,6 +457,7 @@ unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
     unsigned char val2;
     backData=&val2;	
     Write_MFRC522(BitFramingReg, 0x07);
+    
     
     TagType[0]=reqMode;
     (status,backBits) = MFRC522_ToCard(PCD_TRANSCEIVE, TagType, backData);
