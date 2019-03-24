@@ -383,15 +383,15 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
     unsigned char n = 0;
     int i = 0;
     
-    cout << 'MFRC522_ToCard:- command: '<<command<<', sendData: ' << sendData << endl;
+    cout << "MFRC522_ToCard:- command: "<<command<<", sendData: " << sendData << endl;
     if (command == PCD_AUTHENT){
       irqEn = 0x12;
       waitIRq = 0x10;
-      cout << 'MFRC522_ToCard:- command: PCD_AUTHENT' << endl;};
+      cout << "MFRC522_ToCard:- command: PCD_AUTHENT" << endl;};
     if (command == PCD_TRANSCEIVE){
       irqEn = 0x77;
       waitIRq = 0x30;
-      cout << 'MFRC522_ToCard:- command: PCD_TRANSCEIVE' << endl;};
+      cout << "MFRC522_ToCard:- command: PCD_TRANSCEIVE" << endl;};
     
     Write_MFRC522(CommIEnReg, irqEn|0x80);
     ClearBitMask(CommIrqReg, 0x80);
@@ -461,12 +461,12 @@ unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
     backData=&val2;	
     Write_MFRC522(BitFramingReg, 0x07);
     
-    cout << 'MFRC522_Request:- TagType ' << TagType << endl;
+    cout << "MFRC522_Request:- TagType " << (int)reqMode << endl;
 
     TagType[0]=reqMode;
     (status,backBits) = MFRC522_ToCard(PCD_TRANSCEIVE, TagType, backData);
     
-    cout << 'MFRC522_Request:- status: ' << status << ', backdata: '<<backdata<<', backBits: '<< backBits << endl;
+    cout << "MFRC522_Request:- status: " << (int)status << ", backdata: "<<backData<<", backBits: "<< backBits << endl;
 
 
     if (((status != MI_OK) | (backBits != 0x10))){

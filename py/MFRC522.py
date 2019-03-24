@@ -245,7 +245,7 @@ class MFRC522:
     TagType.append(reqMode);
     print('MFRC522_Request:- TagType', TagType)
     (status,backData,backBits) = self.MFRC522_ToCard(self.PCD_TRANSCEIVE, TagType)
-    print('MFRC522_Request:-  status: {}, backdata: {}, backBits: {}'.format(TagType, backdata, backBits))
+    print('MFRC522_Request:-  status: {}, backdata: {}, backBits: {}'.format(TagType, backData, backBits))
 
     input('warte?')
     if ((status != self.MI_OK) | (backBits != 0x10)):
