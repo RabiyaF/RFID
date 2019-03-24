@@ -179,7 +179,7 @@ int SpiWriteAndRead (int spi_device, unsigned char *data, int length)
 	}
 
 
-	cout << "SpiWriteAndRead: retVal" << retVal << endl;
+	// cout << "SpiWriteAndRead: retVal" << retVal << endl;
 
 	return retVal;
 }
@@ -345,20 +345,21 @@ void MFRC522::Write_MFRC522(unsigned char addr, unsigned char val){
 	unsigned char data[2];
 	data[0]=((addr<<1)&0x7E);
 	data[1]=val;
-	cout << "Write_MFRC522:-" << (int)data[0] << "  " << (int)data[1] << "  " << hex << data[0] << "  " << data[1] << endl;
+	// cout << "Write_MFRC522:- addr " << (int)data[0] << ", val " << (int)data[1] << "  " << endl;
 	SpiWriteAndRead(ChipSelect,data,2);
-	Read_MFRC522(addr);
+	// Read_MFRC522(addr);
 } 
 
 unsigned char MFRC522::Read_MFRC522(unsigned char addr){
 	unsigned char data[2];
 	data[0] = ((addr<<1)&0x7E) | 0x80;
 	data[1] = 0;
-	cout << "Read_MFRC522--" << (int)data[0] << "  " << (int)data[1] << "  " << hex << data[0] << "  " << hex << data[1] << endl;
+	// cout << "Read_MFRC522-- " << (int)data[0] << "  " << (int)data[1] << endl; // << "  " << hex << data[0] << "  " << hex << data[1] << endl;
 	SpiWriteAndRead(ChipSelect,data,2);
-	cout << "Read_MFRC522--++" << (int)data[0] << "  " << (int)data[1] << "  " << hex << data[0] << "  " << hex << data[1] << endl;
-
-	return data[0];
+	// cout << "Read_MFRC522-- val " << (int)data[0] << "  " << (int)data[1]<< endl;  //"  " << hex << data[0] << "  " << hex << data[1] << endl;
+//	int t;
+//	cin >> t;
+	return data[1];
 } 
 
 void MFRC522::SetBitMask(unsigned char reg, unsigned char mask){
@@ -392,15 +393,17 @@ unsigned char MFRC522::MFRC522_ToCard(unsigned char command, unsigned char* send
 		unsigned char n = 0;
 		int i = 0;
 		
-		cout << "MFRC522_ToCard:- command: "<<command<<", sendData: " << sendData << endl;
+//		cout << "MFRC522_ToCard:- command: "<<command<<", sendData: " << sendData << endl;
 		if (command == PCD_AUTHENT){
 			irqEn = 0x12;
 			waitIRq = 0x10;
-			cout << "MFRC522_ToCard:- command: PCD_AUTHENT" << endl;};
+//			cout << "MFRC522_ToCard:- command: PCD_AUTHENT" << endl;
+		};
 		if (command == PCD_TRANSCEIVE){
 			irqEn = 0x77;
 			waitIRq = 0x30;
-			cout << "MFRC522_ToCard:- command: PCD_TRANSCEIVE" << endl;};
+//			cout << "MFRC522_ToCard:- command: PCD_TRANSCEIVE" << endl;
+		};
 		
 		Write_MFRC522(CommIEnReg, irqEn|0x80);
 		ClearBitMask(CommIrqReg, 0x80);
@@ -470,20 +473,22 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 		unsigned char n = 0;
 		int i = 0;
 		
-		cout << "MFRC522_ToCard:- command: "<<command<<", sendData: ";
-		for(int bb=0; bb<sendData.size();bb++){
-			cout << sendData[bb] ;
-		}
-		cout << endl;
+//		cout << "MFRC522_ToCard:- command: "<<command<<", sendData: ";
+		//for(int bb=0; bb<sendData.size();bb++){
+		//	cout << sendData[bb] ;
+		//}
+		//cout << endl;
 
 		if (command == PCD_AUTHENT){
 			irqEn = 0x12;
 			waitIRq = 0x10;
-			cout << "MFRC522_ToCard:- command: PCD_AUTHENT" << endl;};
+//			cout << "MFRC522_ToCard:- command: PCD_AUTHENT" << endl;
+		};
 		if (command == PCD_TRANSCEIVE){
 			irqEn = 0x77;
 			waitIRq = 0x30;
-			cout << "MFRC522_ToCard:- command: PCD_TRANSCEIVE" << endl;};
+//			cout << "MFRC522_ToCard:- command: PCD_TRANSCEIVE" << endl;
+		};
 		
 		Write_MFRC522(CommIEnReg, irqEn|0x80);
 		ClearBitMask(CommIrqReg, 0x80);
@@ -514,34 +519,41 @@ group_obj MFRC522::MFRC522_ToCard_vec(unsigned char command, std::vector<unsigne
 		
 		if (i != 0){
 			if ((Read_MFRC522(ErrorReg) & 0x1B)==0x00){
-				status = MI_OK;}
+				status = MI_OK;
 				
-			if (n & irqEn & 0x01){
-					status = MI_NOTAGERR;}
-					
-			if (command == PCD_TRANSCEIVE){
+				if (n & irqEn & 0x01){
+					status = MI_NOTAGERR;
+				}
+						
+				if (command == PCD_TRANSCEIVE){
 					n = Read_MFRC522(FIFOLevelReg);
 					lastBits = Read_MFRC522(ControlReg) & 0x07;
 					if (lastBits != 0){
-						backLen = (n-1)*8 + lastBits;}}
-					else{
-						backLen = n*8;}
+						backLen = (n-1)*8 + lastBits;
+					}else{
+						backLen = n*8;
+					}
 						
-			if (n == 0){
-						n = 1;}
-						
-			if (n > MAX_LEN){
-						n = MAX_LEN;}
-						
-			i = 0;
+					if (n == 0){
+						n = 1;
+					}
+								
+					if (n > MAX_LEN){
+						n = MAX_LEN;
+					}
+								
+					i = 0;
 					while (i<n){
-						cout << i << " / " << n << endl;
+						// cout << i << " / " << n << endl;
 						backData.push_back(0);
 						backData[i]=(Read_MFRC522(FIFODataReg));
-						i = i + 1;}
-			 }
-		else{
-				status = MI_ERR;}
+						i = i + 1;
+					}
+				}
+			} else{
+				status = MI_ERR;
+			}
+		}
 		group_obj ret_obj;
 		ret_obj.status = status;
 		ret_obj.backData = backData;
@@ -563,7 +575,7 @@ unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
 
 		Write_MFRC522(BitFramingReg, 0x07);  // TODO
 		
-		cout << "MFRC522_Request:- TagType " << (int)reqMode <<  endl << "backData: ";
+//		cout << "MFRC522_Request:- TagType " << (int)reqMode <<  endl << "backData: ";
 
 		// group_obj ret_obj = MFRC522_ToCard_vec(PCD_TRANSCEIVE, TagType2, backData);
 		group_obj ret_obj = MFRC522_ToCard_vec(PCD_TRANSCEIVE, TagType2);
@@ -572,12 +584,12 @@ unsigned char MFRC522::MFRC522_Request(unsigned char reqMode){
 		backBits = ret_obj.backLen;
 
 
-		for(int bb=0; bb<backData.size();bb++){
-			cout << backData[bb] ;
-		}
-		cout << endl;
+		//for(int bb=0; bb<backData.size();bb++){
+		//	cout << backData[bb] ;
+		//}
+		//cout << endl;
 		
-		cout << "MFRC522_Request:- status: " << (int)status <<", backBits: "<< backBits << endl;
+//		cout << "MFRC522_Request:- status: " << (int)status <<", backBits: "<< backBits << endl;
 
 
 		if (((status != MI_OK) | (backBits != 0x10))){
@@ -775,7 +787,7 @@ int main(){
 	int continue_reading = true;
 	MFRC522 MIFAREReader;
 	MIFAREReader.MFRC522_Init();
-	unsigned char status = false;
+	unsigned char status = 0x00;
 	unsigned char TagType;
 	while(continue_reading){
 		(status,TagType) = MIFAREReader.MFRC522_Request(PICC_REQIDL);
